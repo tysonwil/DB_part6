@@ -25,17 +25,37 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	int type;
 	Record record;
 
+	int attrRelCnt;
+	AttrDesc *attrRel;
+
 	// Need to instantiate InsertFileScan
 	InsertFileScan ifs(relation, status);
 	if (status != OK) return status;
 
 	// Get relation information
-	status = relCat->getInfo(relation, relinfo);
+	status = relCat->getInfo(relation, attrRelCnt, attrRel);
 	if (status != OK) return status;
+
+	if(attrRelCnt != attrCnt){
+		// Reject This, some attributes would be null
+		return BAD;
+	}
 
 	// Get attribute information
 	status = attrCat->getRelinfo(relation, attrLen, attrInfo);
 	if (status != OK) return status;
+
+	AttrDesc attrDescArray[attrCnt];
+    for (int i = 0; i < attrCnt; i++)
+    {
+        Status status = attrCat->getInfo(attrList[i].relName,
+                                         attrList[i].attrName,
+                                         attrDescArray[i]);
+        if (status != OK)
+        {
+            return status;
+        }
+    }
 
 	// Determine what attributes will be inserted, and then
 	// sum total size of these attributes in order to determine
@@ -50,6 +70,13 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	// Set record length
 	record.length = recordLength;
 
+	/*
+	char outputData[reclen];
+    Record outputRec;
+    outputRec.data = (void *) outputData;
+    outputRec.length = reclen;
+    */
+
 	// Determine attribute value and insert into record
 	// Since attrValue is a string, it needs to be converted
 	for (int i=0; i < attrCnt, i++) {
@@ -58,6 +85,7 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 				type = attrInfo[j].attrType;
 				if (type == INTEGER) {
 					int value = atoi(attrList[i].attrValue);
+					// memcpy(destination, source, type length);
 					// TODO: copy into memory
 				}
 				else if (type == FLOAT) {
