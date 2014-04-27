@@ -48,7 +48,7 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	// sum total size of these attributes in order to determine
 	// total space of this new record
 	for (int i=0; i < attrCnt; i++) {
-		recordLength += attrDescArray[i].attrLen;
+		recordLength += attrRel[i].attrLen;
 	}
 
 	char insertData[recordLength];
@@ -63,16 +63,22 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 				type = attrList[i].attrType;
 				switch(type){
 					case INTEGER:
+					{
 						int valuei = atoi((char*)attrList[i].attrValue);
 						memcpy(insertData + attrRel[j].attrOffset, &valuei, attrList[i].attrLen);
 						break;
+					}
 					case FLOAT:
+					{
 						float valuef = atof((char*)attrList[i].attrValue);
 						memcpy(insertData + attrRel[j].attrOffset, &valuef, attrList[i].attrLen);
 						break;
+					}
 					case STRING:
+					{
 						memcpy(insertData + attrRel[j].attrOffset, attrList[i].attrValue, attrList[i].attrLen);
 						break;
+					}
 				}
 				break;
 			}
