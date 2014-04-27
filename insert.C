@@ -24,6 +24,7 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	int type;
 	Record record;
 	RID rid;
+	RelDesc *relDesc;
 
 	int attrRelCnt;
 
@@ -31,12 +32,12 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	InsertFileScan ifs(relation, status);
 	if (status != OK) return status;
 
-	status = relCat->getInfo(relation, attrRelCnt);
+	status = relCat->getInfo(relation, relDesc);
 	if (status != OK) return status;
-	AttrDesc attrRel[attrRelCnt];
+	AttrDesc attrRel[relDesc.attrCnt];
 
 	// Get attribute information
-	status = attrCat->getRelInfo(relation, attrRelCnt, attrRel);
+	status = attrCat->getRelInfo(relation, attrRelCnt, (AttrDesc*)attrRel);
 	if (status != OK) return status;
 
 	if(attrRelCnt != attrCnt){
