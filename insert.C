@@ -20,7 +20,6 @@
 const Status QU_Insert(const string & relation, const int attrCnt, const attrInfo attrList[])
 {
 	Status status = OK;
-	int attrLen = 0;
 	int recordLength = 0;
 	int type;
 	Record record;
@@ -42,13 +41,13 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 
 	if(attrRelCnt != attrCnt){
 		// Reject This, some attributes would be null
-		return BAD;
+		return ATTRTYPEMISMATCH;
 	}
 
 	// Determine what attributes will be inserted, and then
 	// sum total size of these attributes in order to determine
 	// total space of this new record
-	for (int i=0; i < attrCnt, i++) {
+	for (int i=0; i < attrCnt; i++) {
 		recordLength += attrDescArray[i].attrLen;
 	}
 
@@ -58,18 +57,18 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 
 	// Determine attribute value and insert into record
 	// Since attrValue is a string, it needs to be converted
-	for (int i=0; i < attrCnt, i++) {
+	for (int i=0; i < attrCnt; i++) {
 		for (int j=0; j < attrRelCnt; j++) {
 			if (strcmp(attrList[i].attrName, attrRel[j].attrName) == 0) {
 				type = attrList[i].attrType;
 				switch(type){
 					case INTEGER:
-						int value = atoi(attrList[i].attrValue);
-						memcpy(insertData + attrRel[j].attrOffset, &value, attrList[i].attrLen);
+						int valuei = atoi((char*)attrList[i].attrValue);
+						memcpy(insertData + attrRel[j].attrOffset, &valuei, attrList[i].attrLen);
 						break;
 					case FLOAT:
-						float value = atof(attrList[i].attrValue);
-						memcpy(insertData + attrRel[j].attrOffset, &value, attrList[i].attrLen);
+						float valuef = atof((char*)attrList[i].attrValue);
+						memcpy(insertData + attrRel[j].attrOffset, &valuef, attrList[i].attrLen);
 						break;
 					case STRING:
 						memcpy(insertData + attrRel[j].attrOffset, attrList[i].attrValue, attrList[i].attrLen);

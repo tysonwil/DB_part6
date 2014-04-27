@@ -41,7 +41,8 @@ typedef struct {
 	  int attrLen;                          // attribute length
 	} AttrDesc;
 
-	int filValue, type;
+	int filValuei, type;
+    float filValuef;
 	char *filter;
 	attrDesc *attrDesc;
     AttrDesc attrDescArray[projCnt];
@@ -73,12 +74,12 @@ typedef struct {
     type = attr.attrType;
     switch(type){
     	case INTEGER:
-    		filValue = atoi(attrValue);
-    		memcpy(&filter, (char*)&filValue, sizeof(int));
+    		filValuei = atoi(attrValue);
+    		memcpy(&filter, (char*)&filValuei, sizeof(int));
     		break;
     	case FLOAT:
-    		filValue = atof(attrValue);
-    		memcpy(&filter, (char*)&filValue, sizeof(float));
+    		filValuef = atof(attrValue);
+    		memcpy(&filter, (char*)&filValuef, sizeof(float));
     		break;
     	case STRING:
     		memcpy(&filter, &attrValue, attr.attrLen);
