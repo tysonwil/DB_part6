@@ -24,16 +24,20 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 	int recordLength = 0;
 	int type;
 	Record record;
+	RID rid;
 
 	int attrRelCnt;
-	AttrDesc *attrRel;
 
 	// Need to instantiate InsertFileScan
 	InsertFileScan ifs(relation, status);
 	if (status != OK) return status;
 
-	// Get relation information
-	status = relCat->getInfo(relation, attrRelCnt, attrRel);
+	status = relCat->getInfo(relation, attrRelCnt);
+	if (status != OK) return status;
+	AttrDesc attrRel[attrRelCnt];
+
+	// Get attribute information
+	status = attrCat->getRelInfo(relation, attrRelCnt, attrRel);
 	if (status != OK) return status;
 
 	if(attrRelCnt != attrCnt){
@@ -41,60 +45,37 @@ const Status QU_Insert(const string & relation, const int attrCnt, const attrInf
 		return BAD;
 	}
 
-	// Get attribute information
-	status = attrCat->getRelinfo(relation, attrLen, attrInfo);
-	if (status != OK) return status;
-
-	AttrDesc attrDescArray[attrCnt];
-    for (int i = 0; i < attrCnt; i++)
-    {
-        Status status = attrCat->getInfo(attrList[i].relName,
-                                         attrList[i].attrName,
-                                         attrDescArray[i]);
-        if (status != OK)
-        {
-            return status;
-        }
-    }
-
 	// Determine what attributes will be inserted, and then
 	// sum total size of these attributes in order to determine
 	// total space of this new record
 	for (int i=0; i < attrCnt, i++) {
-		for (int j=0; j < attrLen; j++) {
-			if (strcmp(attrList[i].attrName, attrInfo[j].attrName) == 0)
-				recordLength += attrList[i].attrLen;
-		}
+		recordLength += attrDescArray[i].attrLen;
 	}
 
-	// Set record length
-	record.length = recordLength;
-
-	/*
-	char outputData[reclen];
-    Record outputRec;
-    outputRec.data = (void *) outputData;
-    outputRec.length = reclen;
-    */
+	char insertData[recordLength];
+    record.data = (void *) insertData;
+    record.length = recordLength;
 
 	// Determine attribute value and insert into record
 	// Since attrValue is a string, it needs to be converted
 	for (int i=0; i < attrCnt, i++) {
-		for (int j=0; j < attrLen; j++) {
-			if (strcmp(attrList[i].attrName, attrInfo[j].attrName) == 0) {
-				type = attrInfo[j].attrType;
-				if (type == INTEGER) {
-					int value = atoi(attrList[i].attrValue);
-					// memcpy(destination, source, type length);
-					// TODO: copy into memory
+		for (int j=0; j < attrRelCnt; j++) {
+			if (strcmp(attrList[i].attrName, attrRel[j].attrName) == 0) {
+				type = attrList[i].attrType;
+				switch(type){
+					case INTEGER:
+						int value = atoi(attrList[i].attrValue);
+						memcpy(insertData + attrRel[j].attrOffset, &value, attrList[i].attrLen);
+						break;
+					case FLOAT:
+						float value = atof(attrList[i].attrValue);
+						memcpy(insertData + attrRel[j].attrOffset, &value, attrList[i].attrLen);
+						break;
+					case STRING:
+						memcpy(insertData + attrRel[j].attrOffset, attrList[i].attrValue, attrList[i].attrLen);
+						break;
 				}
-				else if (type == FLOAT) {
-					float value = atof(attrList[i].attrValue);
-					// TODO: copy into memory
-				}
-				else {
-					// TODO: already a string, copy into memory
-				}
+				break;
 			}
 		}
 	}
